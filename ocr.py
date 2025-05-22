@@ -16,7 +16,7 @@ def preprocess_image(path: str) -> str:
 
 
 def get_iam_token_from_json() -> str:
-    service_account_json = os.environ["YANDEX_AUTHORIZED_KEY_JSON _2"]
+    service_account_json = os.environ["YANDEX_AUTHORIZED_KEY_JSON_2"]
     sa = json.loads(service_account_json)
 
     url = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
