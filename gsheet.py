@@ -2,6 +2,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import json
 from io import StringIO
+import os
 
 
 HEADERS = ["filename", "raw_text", "parsed_date", "supplier", "total_sum", "source_path"]
