@@ -39,9 +39,13 @@ def already_processed(filename):
 
 def process_new_files(force_check_all=False):
     response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
-    if 'Contents' not in response:
-        print("[INFO] Нет файлов в", PREFIX)
+    if 'Contents' not in response or not response['Contents']:
+        print(f"[INFO] Нет файлов в '{PREFIX}' или они все — папки")
         return
+    else:
+        print("[DEBUG] Найдено объектов:", len(response['Contents']))
+        for obj in response['Contents']:
+            print("[DEBUG] Объект:", obj['Key'])
 
     for obj in response['Contents']:
         key = obj['Key']
