@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import os
 from yandexcloud import SDK
-from yandexcloud._auth import static_credentials
+from yandexcloud.auth import StaticCredentials
 
 def preprocess_image(path: str) -> str:
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -19,7 +19,7 @@ def get_text_from_yandex(image_path, folder_id):
     access_key = os.environ["YANDEX_VISION_ACCESS_KEY_ID"]
     secret_key = os.environ["YANDEX_VISION_SECRET_ACCESS_KEY"]
 
-    sdk = SDK(authorizer=static_credentials.StaticCredentials(access_key, secret_key))
+    sdk = SDK(authorizer=StaticCredentials(access_key, secret_key))
     client = sdk.client("vision")
 
     with open(processed_image_path, "rb") as f:
