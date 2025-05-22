@@ -2,6 +2,7 @@ import psycopg2
 import os
 
 def save_invoice_to_db(data: dict):
+    print("[DEBUG] Соединение с PostgreSQL установлено")
     conn = psycopg2.connect(
         host=os.environ["PGHOST"],
         dbname=os.environ["PGDATABASE"],
@@ -10,6 +11,7 @@ def save_invoice_to_db(data: dict):
         port=os.environ.get("PGPORT", "5432")
     )
     cur = conn.cursor()
+    print("[DEBUG] Соединение с PostgreSQL установлено")
 
     # ✅ Создание таблицы, если её ещё нет
     cur.execute("""
