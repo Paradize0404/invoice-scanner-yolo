@@ -11,9 +11,24 @@ def save_invoice_to_db(data: dict):
     )
     cur = conn.cursor()
 
+    # ✅ Создание таблицы, если её ещё нет
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS invoices_ocr_data (
+            id SERIAL PRIMARY KEY,
+            filename TEXT UNIQUE,
+            raw_text TEXT,
+            parsed_date TEXT,
+            supplier TEXT,
+            total_sum TEXT,
+            source_path TEXT
+        )
+    """)
+
+    # 📥 Вставка данных
     cur.execute("""
         INSERT INTO invoices_ocr_data (filename, raw_text, parsed_date, supplier, total_sum, source_path)
         VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (filename) DO NOTHING
     """, (
         data['filename'],
         data['raw_text'],
