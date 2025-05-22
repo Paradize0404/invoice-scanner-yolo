@@ -38,7 +38,7 @@ def already_processed(filename):
 
 def list_all_files():
     paginator = s3.get_paginator('list_objects_v2')
-    pages = paginator.paginate(Bucket=BUCKET_NAME, Prefix=PREFIX)
+    pages = paginator.paginate(Bucket=BUCKET_NAME, Prefix=PREFIX, Delimiter='')
 
     all_files = []
     for page in pages:
