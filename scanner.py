@@ -11,7 +11,7 @@ from gsheet import write_invoice_to_gsheet
 BUCKET_NAME = os.environ["YANDEX_BUCKET_NAME"]
 PREFIX = os.environ.get("YANDEX_INVOICE_PREFIX", "invoices/")
 FOLDER_ID = os.environ["YANDEX_FOLDER_ID"]
-IAM_TOKEN = os.environ["YANDEX_IAM_TOKEN"]
+
 
 session = boto3.session.Session()
 s3 = session.client(
@@ -57,7 +57,7 @@ def process_new_files():
         s3.download_file(BUCKET_NAME, key, tmp_file.name)
 
         try:
-            text = get_text_from_yandex(tmp_file.name, IAM_TOKEN, FOLDER_ID)
+            text = get_text_from_yandex(tmp_file.name, FOLDER_ID)
             parsed = parse_invoice_text(text)
 
             data = {
