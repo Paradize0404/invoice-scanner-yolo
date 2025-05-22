@@ -74,7 +74,14 @@ def get_text_from_yandex(image_path: str, folder_id: str) -> str:
         response.raise_for_status()
 
         result = response.json()
-        return result["results"][0]["results"][0]["textDetection"]["pages"][0]["blocks"][0]["lines"][0]["text"]
+        try:
+            blocks = result["results"][0]["results"][0]["textDetection"]["pages"][0]["blocks"]
+            lines = [line["text"] for block in blocks for line in block.get("lines", [])]
+            full_text = "\n".join(lines)
+        except (KeyError, IndexError, TypeError) as e:
+            raise Exception(f"OCR parse error: {e}")
+
+        return full_text
 
     except Exception as e:
         return f"[Ошибка OCR: {e}]"

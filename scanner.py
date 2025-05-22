@@ -81,6 +81,7 @@ def process_new_files(force_check_all=False):
 
         try:
             text = get_text_from_yandex(tmp_file.name, FOLDER_ID)
+            print(f"[OCR ТЕКСТ] {text[:500]}")  # покажет первые 500 символов
             parsed = parse_invoice_text(text)
 
             data = {
