@@ -8,25 +8,14 @@ import uuid
 
 print("[DEBUG] IAM ключ:", os.environ["YANDEX_VISION_CREDENTIALS_JSON"][:100])
 
+from yandexcloud import SDK
 
 def get_iam_token_from_json() -> str:
     key = json.loads(os.environ["YANDEX_VISION_CREDENTIALS_JSON"])
+    sdk = SDK(service_account_key=key)
+    iam_token = sdk.get_credentials().get_iam_token()
+    return iam_token
 
-    url = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "yandexPassportOauthToken": None,
-        "jwt": None,
-        "service_account_id": key["service_account_id"],
-        "key_id": key["id"],
-        "private_key": key["private_key"]
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code != 200:
-        raise Exception(f"Ошибка получения IAM-токена: {response.text}")
-
-    return response.json()["iamToken"]
 
 
 
