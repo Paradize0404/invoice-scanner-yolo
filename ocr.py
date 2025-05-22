@@ -6,8 +6,11 @@ import cv2
 import uuid
 from yandexcloud import SDK
 
+print("[DEBUG] IAM ключ:", os.environ["YANDEX_VISION_CREDENTIALS_JSON"][:100])
+
+
 def get_iam_token_from_json() -> str:
-    key = json.loads(os.environ["YANDEX_VISION_CREDENTIALS_JSON_2"])
+    key = json.loads(os.environ["YANDEX_VISION_CREDENTIALS_JSON"])
     sdk = SDK(service_account_key=key)
     return sdk.get_iam_token()
 
