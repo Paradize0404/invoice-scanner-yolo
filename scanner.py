@@ -12,7 +12,6 @@ BUCKET_NAME = os.environ["YANDEX_BUCKET_NAME"]
 PREFIX = os.environ.get("YANDEX_INVOICE_PREFIX", "invoices/")
 FOLDER_ID = os.environ["YANDEX_FOLDER_ID"]
 
-
 session = boto3.session.Session()
 s3 = session.client(
     service_name='s3',
@@ -37,17 +36,27 @@ def already_processed(filename):
     conn.close()
     return exists
 
+def list_all_files():
+    paginator = s3.get_paginator('list_objects_v2')
+    pages = paginator.paginate(Bucket=BUCKET_NAME, Prefix=PREFIX)
+
+    all_files = []
+    for page in pages:
+        if 'Contents' in page:
+            all_files.extend(page['Contents'])
+    return all_files
+
 def process_new_files(force_check_all=False):
-    response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
-    if 'Contents' not in response or not response['Contents']:
+    objects = list_all_files()
+    if not objects:
         print(f"[INFO] Нет файлов в '{PREFIX}' или они все — папки")
         return
     else:
-        print("[DEBUG] Найдено объектов:", len(response['Contents']))
-        for obj in response['Contents']:
+        print("[DEBUG] Найдено объектов:", len(objects))
+        for obj in objects:
             print("[DEBUG] Объект:", obj['Key'])
 
-    for obj in response['Contents']:
+    for obj in objects:
         key = obj['Key']
         if key.endswith('/') or not key.lower().endswith(('.jpg', '.jpeg', '.png')):
             continue
@@ -99,23 +108,9 @@ def scan_all_files_once():
 def scan_new_files_periodically():
     process_new_files(force_check_all=False)
 
-
-
-
 interval = int(os.environ.get("SCAN_INTERVAL_SECONDS", 600))
 
-# Добавь эти функции выше, если ещё не добавил
-def scan_all_files_once():
-    print("[🔁] Первый запуск: сканируем ВСЕ файлы в бакете (если не в базе)...")
-    process_new_files(force_check_all=True)
-
-def scan_new_files_periodically():
-    process_new_files(force_check_all=False)
-
-# ▶ Первый проход по всем файлам
 scan_all_files_once()
-
-# ⏲ Периодическая проверка новых
 schedule.every(interval).seconds.do(scan_new_files_periodically)
 
 print(f"[🚀] Сканер запущен. Интервал: {interval} секунд")
@@ -123,4 +118,3 @@ print(f"[🚀] Сканер запущен. Интервал: {interval} сек�
 while True:
     schedule.run_pending()
     time.sleep(1)
-
