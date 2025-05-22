@@ -7,6 +7,7 @@ from ocr import get_text_from_yandex
 from parser import parse_invoice_text
 from db import save_invoice_to_db
 from gsheet import write_invoice_to_gsheet
+from db import init_db_schema
 
 BUCKET_NAME = os.environ["YANDEX_BUCKET_NAME"]
 PREFIX = os.environ.get("YANDEX_INVOICE_PREFIX", "invoices/")
@@ -100,6 +101,9 @@ def process_new_files(force_check_all=False):
         finally:
             tmp_file.close()
             os.remove(tmp_file.name)
+
+init_db_schema()
+
 
 def scan_all_files_once():
     print("[🔁] Первый запуск: сканируем ВСЕ файлы в бакете (если не в базе)...")
