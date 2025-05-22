@@ -49,7 +49,7 @@ def process_new_files(force_check_all=False):
 
     for obj in response['Contents']:
         key = obj['Key']
-        if not key.endswith(('.jpg', '.jpeg', '.png')):
+        if key.endswith('/') or not key.lower().endswith(('.jpg', '.jpeg', '.png')):
             continue
 
         filename = os.path.basename(key)
