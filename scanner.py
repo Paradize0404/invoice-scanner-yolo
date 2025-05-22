@@ -37,10 +37,10 @@ def already_processed(filename):
     conn.close()
     return exists
 
-def process_new_files():
+def process_new_files(force_check_all=False):
     response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
     if 'Contents' not in response:
-        print("[INFO] Нет новых файлов в", PREFIX)
+        print("[INFO] Нет файлов в", PREFIX)
         return
 
     for obj in response['Contents']:
@@ -49,10 +49,19 @@ def process_new_files():
             continue
 
         filename = os.path.basename(key)
-        if already_processed(filename):
+
+        if not force_check_all and already_processed(filename):
             continue
 
-        print(f"[🟡] Обработка нового файла: {filename}")
+        if force_check_all:
+            print(f"[🔍] Проверка {filename} на наличие в БД...")
+
+        if already_processed(filename):
+            if force_check_all:
+                print(f"[⚪️] Уже в базе: {filename}")
+            continue
+
+        print(f"[🟡] Обработка файла: {filename}")
         tmp_file = NamedTemporaryFile(delete=False)
         s3.download_file(BUCKET_NAME, key, tmp_file.name)
 
@@ -79,12 +88,35 @@ def process_new_files():
             tmp_file.close()
             os.remove(tmp_file.name)
 
-interval = int(os.environ.get("SCAN_INTERVAL_SECONDS", 600))
-schedule.every(interval).seconds.do(process_new_files)
+def scan_all_files_once():
+    print("[🔁] Первый запуск: сканируем ВСЕ файлы в бакете (если не в базе)...")
+    process_new_files(force_check_all=True)
 
-print(f"[🚀] Запущен сканер. Интервал: {interval} секунд")
-process_new_files()  # первичная проверка при запуске
+def scan_new_files_periodically():
+    process_new_files(force_check_all=False)
+
+
+
+
+interval = int(os.environ.get("SCAN_INTERVAL_SECONDS", 600))
+
+# Добавь эти функции выше, если ещё не добавил
+def scan_all_files_once():
+    print("[🔁] Первый запуск: сканируем ВСЕ файлы в бакете (если не в базе)...")
+    process_new_files(force_check_all=True)
+
+def scan_new_files_periodically():
+    process_new_files(force_check_all=False)
+
+# ▶ Первый проход по всем файлам
+scan_all_files_once()
+
+# ⏲ Периодическая проверка новых
+schedule.every(interval).seconds.do(scan_new_files_periodically)
+
+print(f"[🚀] Сканер запущен. Интервал: {interval} секунд")
 
 while True:
     schedule.run_pending()
     time.sleep(1)
+
