@@ -8,4 +8,4 @@ python-dotenv
 Pillow
 boto3
 opencv-python-headless
-yandexcloud
+yandexcloud==0.254.0

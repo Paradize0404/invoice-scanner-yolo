@@ -4,6 +4,13 @@ import os
 import requests
 import cv2
 import uuid
+from yandexcloud import SDK
+
+def get_iam_token_from_json() -> str:
+    key = json.loads(os.environ["YANDEX_VISION_CREDENTIALS_JSON_2"])
+    sdk = SDK(service_account_key=key)
+    return sdk.get_iam_token()
+
 
 
 def preprocess_image(path: str) -> str:
@@ -15,21 +22,21 @@ def preprocess_image(path: str) -> str:
     return processed_path
 
 
-def get_iam_token_from_json() -> str:
-    service_account_json = os.environ["YANDEX_AUTHORIZED_KEY_JSON_2"]
-    sa = json.loads(service_account_json)
-
-    url = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
-    response = requests.post(url, json={"yandexPassportOauthToken": None, "jwt": None}, data={
-        "service_account_id": sa["service_account_id"],
-        "key_id": sa["id"],
-        "private_key": sa["private_key"]
-    })
-
-    if response.status_code != 200:
-        raise Exception(f"Ошибка получения IAM-токена: {response.text}")
-
-    return response.json()["iamToken"]
+#def get_iam_token_from_json() -> str:
+#    service_account_json = os.environ["YANDEX_AUTHORIZED_KEY_JSON_2"]
+#    sa = json.loads(service_account_json)
+#
+#    url = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
+#    response = requests.post(url, json={"yandexPassportOauthToken": None, "jwt": None}, data={
+#        "service_account_id": sa["service_account_id"],
+#        "key_id": sa["id"],
+#        "private_key": sa["private_key"]
+#    })
+#
+#    if response.status_code != 200:
+#        raise Exception(f"Ошибка получения IAM-токена: {response.text}")
+#
+#    return response.json()["iamToken"]
 
 
 def get_text_from_yandex(image_path: str, folder_id: str) -> str:
