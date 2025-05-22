@@ -6,17 +6,25 @@ import cv2
 import uuid
 
 
-print("[DEBUG] IAM ключ:", os.environ["YANDEX_VISION_CREDENTIALS_JSON"][:100])
 
-from yandexcloud import SDK
+print(json.loads(os.environ["YANDEX_VISION_CREDENTIALS_JSON"]))
 
 def get_iam_token_from_json() -> str:
     key = json.loads(os.environ["YANDEX_VISION_CREDENTIALS_JSON"])
-    sdk = SDK(service_account_key=key)
-    iam_token = sdk.get_credentials().get_iam_token()
-    return iam_token
 
+    url = "https://iam.api.cloud.yandex.net/iam/v1/tokens"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "service_account_id": key["service_account_id"],
+        "key_id": key["id"],
+        "private_key": key["private_key"]
+    }
 
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code != 200:
+        raise Exception(f"Ошибка получения IAM-токена: {response.text}")
+
+    return response.json()["iamToken"]
 
 
 def preprocess_image(path: str) -> str:
@@ -26,8 +34,6 @@ def preprocess_image(path: str) -> str:
     processed_path = f"/tmp/{uuid.uuid4().hex}_processed.jpg"
     cv2.imwrite(processed_path, thresh)
     return processed_path
-
-
 
 
 def get_text_from_yandex(image_path: str, folder_id: str) -> str:
@@ -46,7 +52,7 @@ def get_text_from_yandex(image_path: str, folder_id: str) -> str:
 
         payload = {
             "folderId": folder_id,
-            "analyze_specs": [{
+            "analyze_specs": [ {
                 "content": encoded_image,
                 "features": [{
                     "type": "TEXT_DETECTION",
@@ -60,21 +66,19 @@ def get_text_from_yandex(image_path: str, folder_id: str) -> str:
         url = "https://vision.api.cloud.yandex.net/vision/v1/batchAnalyze"
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
-
         result = response.json()
-        try:
-            blocks = result["results"][0]["results"][0]["textDetection"]["pages"][0]["blocks"]
-            lines = [line["text"] for block in blocks for line in block.get("lines", [])]
-            full_text = "\n".join(lines)
-        except (KeyError, IndexError, TypeError) as e:
-            raise Exception(f"OCR parse error: {e}")
 
-        return full_text
+        blocks = result["results"][0]["results"][0]["textDetection"]["pages"][0].get("blocks", [])
+        lines = [line["text"] for block in blocks for line in block.get("lines", [])]
+
+        if not lines:
+            raise Exception("OCR не вернул ни одной строки")
+
+        return "\n".join(lines)
 
     except Exception as e:
         return f"[Ошибка OCR: {e}]"
 
     finally:
         if os.path.exists(processed_image_path):
-            print("[DEBUG] os module доступен:", dir(os)[:3])
             os.remove(processed_image_path)
