@@ -71,4 +71,5 @@ def get_text_from_yandex(image_path: str, folder_id: str) -> str:
 
     finally:
         if os.path.exists(processed_image_path):
+            print("[DEBUG] os module доступен:", dir(os)[:3])
             os.remove(processed_image_path)
