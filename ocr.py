@@ -4,12 +4,13 @@ import numpy as np
 import os
 import json
 from yandexcloud import SDK
+import uuid
 
 def preprocess_image(path: str) -> str:
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     img = cv2.equalizeHist(img)
     _, thresh = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    processed_path = path.replace(".jpg", "_processed.jpg").replace(".jpeg", "_processed.jpg").replace(".png", "_processed.jpg")
+    processed_path = f"/tmp/{uuid.uuid4().hex}_processed.jpg"
     cv2.imwrite(processed_path, thresh)
     return processed_path
 
