@@ -20,11 +20,11 @@ def get_access_token(api_login):
 
 def save_token_to_db(token):
     conn = psycopg2.connect(
-        host=DB_HOST,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS,
-        port=DB_PORT
+        host=PGHOST,
+        dbname=PGDATABASE,
+        user=PGUSER,
+        password=PGPASSWORD,
+        port=PGPORT
     )
     cur = conn.cursor()
     cur.execute("""
