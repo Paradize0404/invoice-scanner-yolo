@@ -3,8 +3,7 @@ import requests
 import psycopg2
 from datetime import datetime
 
-# Переменные окружения (Railway > Variables)
-API_LOGIN = os.getenv("IIKO_API_LOGIN")
+API_LOGIN   = os.getenv("IIKO_API_LOGIN")
 PGHOST      = os.getenv("PGHOST")
 PGDATABASE  = os.getenv("PGDATABASE")
 PGUSER      = os.getenv("PGUSER")
@@ -29,12 +28,17 @@ def save_token_to_db(token):
     cur = conn.cursor()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS iiko_access_tokens (
-            id SERIAL PRIMARY KEY,
+            id INT PRIMARY KEY DEFAULT 1,
             token TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
-    cur.execute("INSERT INTO iiko_access_tokens (token) VALUES (%s);", (token,))
+    cur.execute("""
+        INSERT INTO iiko_access_tokens (id, token)
+        VALUES (1, %s)
+        ON CONFLICT (id) DO UPDATE
+        SET token = EXCLUDED.token, created_at = CURRENT_TIMESTAMP;
+    """, (token,))
     conn.commit()
     cur.close()
     conn.close()
@@ -42,4 +46,4 @@ def save_token_to_db(token):
 if __name__ == "__main__":
     token = get_access_token(API_LOGIN)
     save_token_to_db(token)
-    print(f"✅ Token saved to DB at {datetime.now()}")
+    print(f"✅ Token saved/updated at {datetime.now()}")
